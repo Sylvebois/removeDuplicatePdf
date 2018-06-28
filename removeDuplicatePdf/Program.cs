@@ -40,7 +40,7 @@ namespace removeDuplicatePdf
                     //Récupère la liste des fichiers dont le nom et la date correspondent
                     DataRow[] fileList = files.Select("name like '" + commonFileName + "%' and name <> '" + fullFileName + "'");
 
-                    Parallel.ForEach(fileList, fileToCompare =>
+                    foreach(DataRow fileToCompare in fileList)
                     {
                         string fullFileToCompareName = fileToCompare["name"].ToString();
                         string fileToCompareState = fileToCompare["state"].ToString();
@@ -75,7 +75,7 @@ namespace removeDuplicatePdf
                                 Console.WriteLine("A supprimer : " + fullFileToCompareName + " car idem que \r\n" + fullFileName);
                             }
                         }
-                    });
+                    }
                 }
             }
 
@@ -118,7 +118,7 @@ namespace removeDuplicatePdf
                 string.Empty, GhostscriptLicense.GPL
             );
 
-            rasterizer.Open(inputMS, version, true);
+            rasterizer.Open(inputMS, version, false);
 
             for (int i = 1; i <= rasterizer.PageCount; i++)
             {
