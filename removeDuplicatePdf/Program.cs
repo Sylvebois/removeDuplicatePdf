@@ -17,94 +17,114 @@ namespace removeDuplicatePdf
     {
         static void Main(string[] args)
         {
-            Stopwatch chrono = new Stopwatch();
-            chrono.Start();
+            string folder = "";
 
-            string folder = "E:\\tmp\\empty folders test 13700";
-            DataTable files = ConvertToDatatable(Directory.GetFiles(folder));
-
-            foreach (DataRow file in files.Rows)
+            while (true)
             {
-                string fullFileName = file["name"].ToString();
-                string fileState = file["state"].ToString();
-                string base64File = file["base64"].ToString();
+                Console.WriteLine("Dossier à traiter : ");
+                folder = Console.ReadLine()?.ToLower();
 
-                //Si le fichier existe et n'a pas encore été traité ...
-                if (File.Exists(fullFileName) && String.IsNullOrEmpty(fileState))
-                {
-                    file["state"] = "keep";
-
-                    //On prend le tronc commun du nom de fichier
-                    string commonFileName = fullFileName.Substring(0, fullFileName.Length - 10);
-
-                    //Récupère la liste des fichiers dont le nom et la date correspondent
-                    DataRow[] fileList = files.Select("name like '" + commonFileName + "%' and name <> '" + fullFileName + "'");
-
-                    foreach(DataRow fileToCompare in fileList)
-                    {
-                        string fullFileToCompareName = fileToCompare["name"].ToString();
-                        string fileToCompareState = fileToCompare["state"].ToString();
-                        string base64FileToCompare = fileToCompare["base64"].ToString();
-
-                        //Si le fichier à comparer existe et n'a pas encore été traité ...
-                        if (File.Exists(fullFileToCompareName) && String.IsNullOrEmpty(fileToCompareState))
-                        {
-                            //Création des images et encodage en base64
-                            if(String.IsNullOrEmpty(base64File))
-                            {
-                                MemoryStream fileStream = new MemoryStream(System.IO.File.ReadAllBytes(fullFileName));
-                                file["base64"] = PDFToImage(fileStream, 96);
-                                fileStream.Close();
-
-                                base64File = file["base64"].ToString();
-                            }
-
-                            if(String.IsNullOrEmpty(base64FileToCompare))
-                            {
-                                MemoryStream fileToCompareStream = new MemoryStream(System.IO.File.ReadAllBytes(fullFileToCompareName));
-                                fileToCompare["base64"] = PDFToImage(fileToCompareStream, 96);
-                                fileToCompareStream.Close();
-
-                                base64FileToCompare = fileToCompare["base64"].ToString();
-                            }
-
-                            //Comparaison
-                            if(base64File.Equals(base64FileToCompare))
-                            {
-                                fileToCompare["state"] = "delete";
-                                Console.WriteLine("A supprimer : " + fullFileToCompareName + " car idem que \r\n" + fullFileName);
-                            }
-                        }
-                    }
-                }
-            }
-
-            chrono.Stop();
-
-            Console.WriteLine("Nombre de fichiers à supprimer : " + files.Select("state = 'delete'").Count() + " sur " + files.Rows.Count);
-            Console.WriteLine("Temps écoulé pour la recherche : " + chrono.Elapsed + "\r\n");
-
-            string delete = "";
-
-            while(true)
-            {
-                Console.WriteLine("Supprimer les fichiers ? (Y/N)");
-                delete = Console.ReadLine()?.ToLower();
-
-                if(delete == "y" || delete == "n")
+                if (!String.IsNullOrEmpty(folder))
                 {
                     break;
                 }
             }
 
-            if(delete == "y")
+            try
             {
-                DataRow[] toDel = files.Select("state = 'delete'");
+                DataTable files = ConvertToDatatable(Directory.GetFiles(folder, "*.pdf"));
 
-                Parallel.ForEach(toDel, fileToDel =>
+                Stopwatch chrono = new Stopwatch();
+                chrono.Start();
+
+                foreach (DataRow file in files.Rows)
                 {
-                    File.Delete(fileToDel["name"].ToString());
-                });
+                    string fullFileName = file["name"].ToString();
+                    string fileState = file["state"].ToString();
+                    string base64File = file["base64"].ToString();
+
+                    //Si le fichier existe et n'a pas encore été traité ...
+                    if (File.Exists(fullFileName) && String.IsNullOrEmpty(fileState))
+                    {
+                        file["state"] = "keep";
+
+                        //On prend le tronc commun du nom de fichier
+                        string commonFileName = fullFileName.Substring(0, fullFileName.Length - 10);
+
+                        //Récupère la liste des fichiers dont le nom et la date correspondent
+                        DataRow[] fileList = files.Select("name like '" + commonFileName + "%' and name <> '" + fullFileName + "'");
+
+                        foreach (DataRow fileToCompare in fileList)
+                        {
+                            string fullFileToCompareName = fileToCompare["name"].ToString();
+                            string fileToCompareState = fileToCompare["state"].ToString();
+                            string base64FileToCompare = fileToCompare["base64"].ToString();
+
+                            //Si le fichier à comparer existe et n'a pas encore été traité ...
+                            if (File.Exists(fullFileToCompareName) && String.IsNullOrEmpty(fileToCompareState))
+                            {
+                                //Création des images et encodage en base64
+                                if (String.IsNullOrEmpty(base64File))
+                                {
+                                    MemoryStream fileStream = new MemoryStream(System.IO.File.ReadAllBytes(fullFileName));
+                                    file["base64"] = PDFToImage(fileStream, 96);
+                                    fileStream.Close();
+
+                                    base64File = file["base64"].ToString();
+                                }
+
+                                if (String.IsNullOrEmpty(base64FileToCompare))
+                                {
+                                    MemoryStream fileToCompareStream = new MemoryStream(System.IO.File.ReadAllBytes(fullFileToCompareName));
+                                    fileToCompare["base64"] = PDFToImage(fileToCompareStream, 96);
+                                    fileToCompareStream.Close();
+
+                                    base64FileToCompare = fileToCompare["base64"].ToString();
+                                }
+
+                                //Comparaison
+                                if (base64File.Equals(base64FileToCompare))
+                                {
+                                    fileToCompare["state"] = "delete";
+                                    Console.WriteLine("A supprimer : " + fullFileToCompareName + " car idem que \r\n" + fullFileName);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                chrono.Stop();
+
+                Console.WriteLine("Nombre de fichiers à supprimer : " + files.Select("state = 'delete'").Count() + " sur " + files.Rows.Count);
+                Console.WriteLine("Temps écoulé pour la recherche : " + chrono.Elapsed + "\r\n");
+
+                string delete = "";
+
+                while (true)
+                {
+                    Console.WriteLine("Supprimer les fichiers ? (Y/N)");
+                    delete = Console.ReadLine()?.ToLower();
+
+                    if (delete == "y" || delete == "n")
+                    {
+                        break;
+                    }
+                }
+
+                if (delete == "y")
+                {
+                    DataRow[] toDel = files.Select("state = 'delete'");
+
+                    Parallel.ForEach(toDel, fileToDel =>
+                    {
+                        File.Delete(fileToDel["name"].ToString());
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                Console.ReadLine();
             }
         }
 
