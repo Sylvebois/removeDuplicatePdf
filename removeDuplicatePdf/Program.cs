@@ -134,7 +134,7 @@ namespace removeDuplicatePdf
 
             GhostscriptRasterizer rasterizer = new GhostscriptRasterizer();
             GhostscriptVersionInfo version = new GhostscriptVersionInfo(
-                new Version(0, 0, 0), @"C:\Program Files (x86)\gs\gs9.23\bin\gsdll32.dll",
+                new Version(0, 0, 0), @"C:\Program Files\gs\gs9.20\bin\gsdll64.dll",
                 string.Empty, GhostscriptLicense.GPL
             );
 
