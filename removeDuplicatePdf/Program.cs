@@ -32,7 +32,8 @@ namespace removeDuplicatePdf
 
             try
             {
-                DataTable files = ConvertToDatatable(Directory.GetFiles(folder, "*.pdf"));
+                var filesInDirectory = Directory.GetFiles(folder, "*.pdf").OrderByDescending(f => f);
+                DataTable files = ConvertToDatatable(filesInDirectory);
 
                 Stopwatch chrono = new Stopwatch();
                 chrono.Start();
@@ -154,7 +155,7 @@ namespace removeDuplicatePdf
             return base64String;
         }
 
-        static DataTable ConvertToDatatable(Array list)
+        static DataTable ConvertToDatatable(IEnumerable<string> list)
         {
             DataTable dt = new DataTable();
 
