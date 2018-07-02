@@ -38,6 +38,8 @@ namespace removeDuplicatePdf
                 Stopwatch chrono = new Stopwatch();
                 chrono.Start();
 
+                int cmp = 0;
+
                 foreach (DataRow file in files.Rows)
                 {
                     string fullFileName = file["name"].ToString();
@@ -69,6 +71,7 @@ namespace removeDuplicatePdf
                                 {
                                     MemoryStream fileStream = new MemoryStream(System.IO.File.ReadAllBytes(fullFileName));
                                     file["base64"] = PDFToImage(fileStream, 96);
+                                    fileStream.Dispose();
                                     fileStream.Close();
 
                                     base64File = file["base64"].ToString();
@@ -77,10 +80,9 @@ namespace removeDuplicatePdf
                                 if (String.IsNullOrEmpty(base64FileToCompare))
                                 {
                                     MemoryStream fileToCompareStream = new MemoryStream(System.IO.File.ReadAllBytes(fullFileToCompareName));
-                                    fileToCompare["base64"] = PDFToImage(fileToCompareStream, 96);
+                                    base64FileToCompare = PDFToImage(fileToCompareStream, 96);
+                                    fileToCompareStream.Dispose();
                                     fileToCompareStream.Close();
-
-                                    base64FileToCompare = fileToCompare["base64"].ToString();
                                 }
 
                                 //Comparaison
@@ -89,8 +91,16 @@ namespace removeDuplicatePdf
                                     fileToCompare["state"] = "delete";
                                     Console.WriteLine("A supprimer : " + fullFileToCompareName + " car idem que \r\n" + fullFileName);
                                 }
+                                else
+                                {
+                                    fileToCompare["base64"] = base64FileToCompare;
+                                }
                             }
                         }
+                        file["base64"] = "";
+
+                        cmp++;
+                        Console.WriteLine("\r\n fichier n° " + cmp + "\r\n");
                     }
                 }
 
@@ -163,10 +173,6 @@ namespace removeDuplicatePdf
             name.DataType = System.Type.GetType("System.String");
             dt.Columns.Add(name);
 
-            DataColumn lastMod = new DataColumn("lastMod");
-            lastMod.DataType = System.Type.GetType("System.DateTime");
-            dt.Columns.Add(lastMod);
-
             DataColumn base64 = new DataColumn("base64");
             base64.DataType = System.Type.GetType("System.String");
             dt.Columns.Add(base64);
@@ -180,7 +186,6 @@ namespace removeDuplicatePdf
                 DataRow row = dt.NewRow();
 
                 row["name"] = item;
-                row["lastMod"] = File.GetLastWriteTime(item);
                 row["base64"] = "";
                 row["state"] = "";
 
