@@ -86,9 +86,10 @@ namespace removeDuplicatePdf
                                 }
 
                                 //Comparaison
-                                if (base64File.Equals(base64FileToCompare))
+                                if (base64File.Equals(base64FileToCompare) && !String.IsNullOrEmpty(base64File) && !String.IsNullOrEmpty(base64FileToCompare))
                                 {
                                     fileToCompare["state"] = "delete";
+                                    fileToCompare["base64"] = "";
                                     Console.WriteLine("A supprimer : " + fullFileToCompareName + " car idem que \r\n" + fullFileName);
                                 }
                                 else
@@ -149,19 +150,27 @@ namespace removeDuplicatePdf
                 string.Empty, GhostscriptLicense.GPL
             );
 
-            rasterizer.Open(inputMS, version, false);
-
-            for (int i = 1; i <= rasterizer.PageCount; i++)
+            try
             {
-                MemoryStream ms = new MemoryStream();
-                Image img = rasterizer.GetPage(dpi, dpi, 1);
-                img.Save(ms, ImageFormat.Jpeg);
-                ms.Close();
+                rasterizer.Open(inputMS, version, false);
 
-                base64String = Convert.ToBase64String((byte[])ms.ToArray());
+                for (int i = 1; i <= rasterizer.PageCount; i++)
+                {
+                    MemoryStream ms = new MemoryStream();
+                    Image img = rasterizer.GetPage(dpi, dpi, 1);
+                    img.Save(ms, ImageFormat.Jpeg);
+                    ms.Close();
+
+                    base64String = Convert.ToBase64String((byte[])ms.ToArray());
+                }
+
+                rasterizer.Close();
             }
-
-            rasterizer.Close();
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+            
             return base64String;
         }
 
